@@ -41,7 +41,7 @@ module.exports = {
       expiresIn: 31557600000,
     });
 
-    return res.json(payload);
+    return res.json(token);
   },
 
   async googleAuth(accessToken, refreshToken, profile, done) {
