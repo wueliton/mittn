@@ -108,23 +108,15 @@ module.exports = {
 
   googleAuthCallback(req, res) {
     passport.authenticate("google-login", function (err, token) {
-      if (err) {
-        return res.status(401).json(err);
-      }
-      if (token) {
-        return res.status(200).json({ token });
-      }
+      if (err) res.status(401).json(err);
+      if (token) res.status(200).json({ token });
     })(req, res);
   },
 
   googleSignupCallback(req, res) {
     passport.authenticate("google-signup", function (err, token) {
-      if (err) {
-        return res.status(401).json(err);
-      }
-      if (token) {
-        return res.status(200).json({ token });
-      }
+      if (err) res.status(401).json(err);
+      if (token) res.status(200).json({ token });
     })(req, res);
   },
 };
