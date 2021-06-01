@@ -53,12 +53,9 @@ module.exports = {
     let user = await User.findOne({ email: email });
 
     if (!user) {
-      return done(
-        {
-          msg: "User not found",
-        },
-        ""
-      );
+      return done({
+        msg: "User not found",
+      });
     }
 
     const payload = {
@@ -83,13 +80,18 @@ module.exports = {
     let user = await User.findOne({ email: email });
 
     if (user) {
-      return done(
-        {
-          msg: "User allready exists",
-        },
-        ""
-      );
+      return done({
+        msg: "User allready exists",
+      });
     }
+
+    const userSchema = {
+      name,
+      email,
+      googleAccount: true,
+    };
+
+    user = await new User(userSchema).save();
 
     const payload = {
       name: user.name,
@@ -98,11 +100,6 @@ module.exports = {
       phone: user.phone,
     };
 
-    User.save({
-      ...payload,
-      googleAccount: true,
-    });
-
     const token = jwt.sign(payload, process.env.SECRET, {
       expiresIn: 31557600000,
     });
@@ -110,8 +107,19 @@ module.exports = {
     return done(null, token);
   },
 
-  googleCallback(req, res, next) {
-    passport.authenticate("google", function (err, token) {
+  googleAuthCallback(req, res) {
+    passport.authenticate("google-login", function (err, token) {
+      if (err) {
+        return res.status(401).json(err);
+      }
+      if (token) {
+        return res.status(200).json({ token });
+      }
+    })(req, res);
+  },
+
+  googleSignupCallback(req, res) {
+    passport.authenticate("google-signup", function (err, token) {
       if (err) {
         return res.status(401).json(err);
       }

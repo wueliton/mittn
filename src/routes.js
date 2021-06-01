@@ -15,7 +15,8 @@ routes.get(
   passport.authenticate("google-login", { scope: ["profile", "email"] })
 );
 
-routes.get("/auth/google/callback", AuthController.googleCallback);
+routes.get("/login/google/callback", AuthController.googleAuthCallback);
+routes.get("/signup/google/callback", AuthController.googleSignupCallback);
 
 routes.get(
   "/signup/google",
