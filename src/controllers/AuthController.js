@@ -1,10 +1,12 @@
 const { json } = require("express");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const passport = require("passport");
 
 module.exports = {
-  async login(req, res) {
-    const mailTestMask = /(?!.*\.{2})^([a-z\d!#$%&'*+\-\/=?^_`{|}~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+(\.[a-z\d!#$%&'*+\-\/=?^_`{|}~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+)*|"((([\t]*\r\n)?[\t]+)?([\x01-\x08\x0b\x0c\x0e-\x1f\x7f\x21\x23-\x5b\x5d-\x7e\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|\\[\x01-\x09\x0b\x0c\x0d-\x7f\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))*(([\t]*\r\n)?[\t]+)?")@(([a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|[a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-z\d\-._~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*[a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])\.)+([a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|[a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-z\d\-._~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*[a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])\.?$/i;
+  async signIn(req, res) {
+    const mailTestMask =
+      /(?!.*\.{2})^([a-z\d!#$%&'*+\-\/=?^_`{|}~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+(\.[a-z\d!#$%&'*+\-\/=?^_`{|}~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+)*|"((([\t]*\r\n)?[\t]+)?([\x01-\x08\x0b\x0c\x0e-\x1f\x7f\x21\x23-\x5b\x5d-\x7e\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|\\[\x01-\x09\x0b\x0c\x0d-\x7f\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))*(([\t]*\r\n)?[\t]+)?")@(([a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|[a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-z\d\-._~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*[a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])\.)+([a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|[a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-z\d\-._~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*[a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])\.?$/i;
 
     const { email, password } = req.body;
 
@@ -49,15 +51,14 @@ module.exports = {
     const pictures = profile._json.picture;
 
     let user = await User.findOne({ email: email });
-    console.log(user);
 
     if (!user) {
-      let userSchema = {
-        name,
-        email,
-      };
-
-      user = await new User(userSchema).save();
+      return done(
+        {
+          msg: "User not found",
+        },
+        ""
+      );
     }
 
     const payload = {
@@ -72,5 +73,51 @@ module.exports = {
     });
 
     return done(null, token);
+  },
+
+  async googleSignup(accessToken, refreshToken, profile, done) {
+    const name = profile._json.name;
+    const email = profile._json.email;
+    const pictures = profile._json.picture;
+
+    let user = await User.findOne({ email: email });
+
+    if (user) {
+      return done(
+        {
+          msg: "User allready exists",
+        },
+        ""
+      );
+    }
+
+    const payload = {
+      name: user.name,
+      id: user.id,
+      email: user.email,
+      phone: user.phone,
+    };
+
+    User.save({
+      ...payload,
+      googleAccount: true,
+    });
+
+    const token = jwt.sign(payload, process.env.SECRET, {
+      expiresIn: 31557600000,
+    });
+
+    return done(null, token);
+  },
+
+  googleCallback(req, res, next) {
+    passport.authenticate("google", function (err, token) {
+      if (err) {
+        return res.status(401).json(err);
+      }
+      if (token) {
+        return res.status(200).json({ token });
+      }
+    })(req, res);
   },
 };

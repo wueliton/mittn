@@ -8,22 +8,18 @@ routes.get("/", (req, res) => {
   res.send("Hello World");
 });
 
-routes.post("/login", AuthController.login);
+routes.post("/login", AuthController.signIn);
 
 routes.get(
-  "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  "/login/google",
+  passport.authenticate("google-login", { scope: ["profile", "email"] })
 );
 
-routes.get("/auth/google/callback", (req, res) => {
-  passport.authenticate("google", function (err, token) {
-    if (err) {
-      return res.status(401).json(err);
-    }
-    if (token) {
-      return res.status(200).json({ token });
-    }
-  })(req, res);
-});
+routes.get("/auth/google/callback", AuthController.googleCallback);
+
+routes.get(
+  "/signup/google",
+  passport.authenticate("google-signup", { scope: ["profile", "email"] })
+);
 
 module.exports = routes;
