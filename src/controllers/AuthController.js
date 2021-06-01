@@ -32,7 +32,7 @@ module.exports = {
 
     const payload = {
       name: user.name,
-      id: user.id,
+      _id: user._id,
       email: user.email,
       phone: user.phone,
     };
@@ -59,7 +59,7 @@ module.exports = {
 
     const payload = {
       name: user.name,
-      id: user.id,
+      _id: user._id,
       email: user.email,
       phone: user.phone,
     };
@@ -94,7 +94,7 @@ module.exports = {
 
     const payload = {
       name: user.name,
-      id: user.id,
+      _id: user._id,
       email: user.email,
       phone: user.phone,
     };
