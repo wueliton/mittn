@@ -1,4 +1,4 @@
-const { query } = require("express");
+const { query, Router } = require("express");
 const express = require("express");
 const passport = require("passport");
 const routes = express.Router();
@@ -11,6 +11,8 @@ routes.get("/", (req, res) => {
 });
 
 routes.post("/login", AuthController.signIn);
+
+routes.post("/signup", AuthController.signUp);
 
 routes.get(
   "/login/google",
